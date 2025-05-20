@@ -8,6 +8,7 @@ const ChatPage = () => {
     const { nickname } = useNickname();
     const navigate = useNavigate();
 
+    const [connected, setConnected] = useState(false); // ✅ 입장 성공 여부
     const [participants, setParticipants] = useState([]);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
@@ -21,7 +22,6 @@ const ChatPage = () => {
                 const response = await fetch("http://localhost:8081/api/chat/count");
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("욕설 횟수:", data);
                     setBadWordCount(data);
                 } else {
                     console.error("욕설 횟수 요청 실패");
@@ -36,7 +36,7 @@ const ChatPage = () => {
 
     useEffect(() => {
         if (!nickname) {
-            alert("닉네임이 없습니다. 닉네임 입력후 입장해 주세요.");
+            alert("닉네임이 없습니다. 닉네임 입력 후 입장해 주세요.");
             navigate("/");
             return;
         }
@@ -44,48 +44,72 @@ const ChatPage = () => {
         socketRef.current = new WebSocket("ws://localhost:8081/ws/chat");
 
         socketRef.current.onopen = () => {
-            console.log("웹소켓 연결됨");
             socketRef.current.send(
                 JSON.stringify({ type: "ENTER", sender: nickname })
             );
         };
 
         socketRef.current.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const { type, sender, time } = data;
+            try {
+                const data = JSON.parse(event.data);
 
-            if (type === "ENTER") {
-                setParticipants((prev) =>
-                    !prev.includes(sender) ? [...prev, sender] : prev
-                );
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        sender: "system",
-                        content: `${sender}님이 입장하셨습니다.`,
-                        time,
-                    },
-                ]);
-            } else if (type === "LEAVE") {
-                setParticipants((prev) => prev.filter((p) => p !== sender));
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        sender: "system",
-                        content: `${sender}님이 퇴장하셨습니다.`,
-                        time,
-                    },
-                ]);
-            } else if (type === "TALK") {
-                setMessages((prev) => [...prev, data]);
-
-                if (typeof data.badWordCount === "number") {
-                    setBadWordCount(data.badWordCount);
+                // ✅ 참가자 목록 수신 처리
+                if (data.type === "PARTICIPANTS") {
+                    if (Array.isArray(data.participants)) {
+                        setParticipants(data.participants);
+                    }
+                    return;
                 }
 
-                setParticipants((prev) =>
-                    !prev.includes(sender) ? [...prev, sender] : prev
-                );
+                // ✅ 오류 메시지 처리
+                if (data.type === "ERROR") {
+                    alert(data.content || "인원 초과, 잠시만 기다려주세요...");
+                    socketRef.current.close();
+                    navigate("/");
+                    return;
+                }
+
+                const { type, sender, time } = data;
+
+                if (type === "ENTER") {
+                    if (sender === nickname) {
+                        setConnected(true); // ✅ 나 자신이 입장 성공했을 때만 UI 렌더링 허용
+                    }
+
+                    setParticipants((prev) =>
+                        !prev.includes(sender) ? [...prev, sender] : prev
+                    );
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            sender: "system",
+                            content: `${sender}님이 입장하셨습니다.`,
+                            time,
+                        },
+                    ]);
+                } else if (type === "LEAVE") {
+                    setParticipants((prev) => prev.filter((p) => p !== sender));
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            sender: "system",
+                            content: `${sender}님이 퇴장하셨습니다.`,
+                            time,
+                        },
+                    ]);
+                } else if (type === "TALK") {
+                    setMessages((prev) => [...prev, data]);
+
+                    if (typeof data.badWordCount === "number") {
+                        setBadWordCount(data.badWordCount);
+                    }
+
+                    setParticipants((prev) =>
+                        !prev.includes(sender) ? [...prev, sender] : prev
+                    );
+                }
+            } catch (err) {
+                console.error("웹소켓 메시지 파싱 오류:", err);
             }
         };
 
@@ -127,6 +151,11 @@ const ChatPage = () => {
             sendMessage();
         }
     };
+
+    // ✅ 입장 확정 전이면 아무것도 안 보이게
+    if (!connected) {
+        return <div className="flex justify-center items-center h-screen text-lg">입장 확인 중...</div>;
+    }
 
     return (
         <div className="flex flex-col h-screen bg-gray-100 p-4">
