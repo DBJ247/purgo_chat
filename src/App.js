@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import NicknamePage from "./pages/NicknamePage";
 import ChatRoomPage from "./pages/ChatRoomPage";
 import { NicknameProvider, useNickname } from "./context/NicknameContext";
+import IPhoneMockup from "./Mockup/IPhoneMockup";
 
 const ProtectedRoute = ({ children }) => {
     const { nickname } = useNickname();
@@ -21,9 +22,10 @@ const App = () => {
                     <Route
                         path="/chat"
                         element={
-                            <ProtectedRoute>
+                        <IPhoneMockup>
                                 <ChatRoomPage />
-                            </ProtectedRoute>
+                        </IPhoneMockup>
+
                         }
                     />
                 </Routes>

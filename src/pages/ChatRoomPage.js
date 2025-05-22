@@ -8,7 +8,7 @@ const ChatPage = () => {
     const { nickname } = useNickname();
     const navigate = useNavigate();
 
-    const [connected, setConnected] = useState(false); // ✅ 입장 성공 여부
+    const [connected, setConnected] = useState(false);
     const [participants, setParticipants] = useState([]);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
@@ -53,7 +53,6 @@ const ChatPage = () => {
             try {
                 const data = JSON.parse(event.data);
 
-                // ✅ 참가자 목록 수신 처리
                 if (data.type === "PARTICIPANTS") {
                     if (Array.isArray(data.participants)) {
                         setParticipants(data.participants);
@@ -61,7 +60,6 @@ const ChatPage = () => {
                     return;
                 }
 
-                // ✅ 오류 메시지 처리
                 if (data.type === "ERROR") {
                     alert(data.content || "인원 초과, 잠시만 기다려주세요...");
                     socketRef.current.close();
@@ -73,7 +71,7 @@ const ChatPage = () => {
 
                 if (type === "ENTER") {
                     if (sender === nickname) {
-                        setConnected(true); // ✅ 나 자신이 입장 성공했을 때만 UI 렌더링 허용
+                        setConnected(true);
                     }
 
                     setParticipants((prev) =>
@@ -152,37 +150,45 @@ const ChatPage = () => {
         }
     };
 
-    // ✅ 입장 확정 전이면 아무것도 안 보이게
     if (!connected) {
-        return <div className="flex justify-center items-center h-screen text-lg">입장 확인 중...</div>;
+        return (
+            <div className="flex justify-center items-center h-full text-sm text-gray-600">
+                입장 확인 중...
+            </div>
+        );
     }
 
     return (
-        <div className="flex flex-col h-screen bg-gray-100 p-4">
-            <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col h-full w-full max-w-sm mx-auto bg-white">
+            {/* 헤더 */}
+            <div className="flex justify-between items-center p-3 bg-gray-50 border-b">
                 <button
-                    className="bg-gray-300 px-4 py-1 rounded hover:bg-gray-400"
+                    className="bg-gray-200 px-3 py-1 rounded text-sm hover:bg-gray-300"
                     onClick={() => setShowParticipants(!showParticipants)}
                 >
-                    참여자 목록
+                    참여자
                 </button>
-                <div className="text-red-600 font-bold">
-                    욕설 횟수: {badWordCount}
+                <div className="text-red-600 font-bold text-sm">
+                    욕설: {badWordCount}
                 </div>
             </div>
 
+            {/* 참여자 목록 */}
             {showParticipants && (
-                <div className="mb-4 bg-white p-2 rounded shadow">
-                    <h2 className="font-semibold mb-2">👥 참여자</h2>
-                    <ul className="list-disc pl-5">
+                <div className="p-3 bg-blue-50 border-b">
+                    <h3 className="font-semibold text-sm mb-2">👥 참여자 ({participants.length})</h3>
+                    <div className="flex flex-wrap gap-1">
                         {participants.map((p, idx) => (
-                            <li key={idx}>{p}</li>
+                            <span key={idx} className="bg-blue-100 px-2 py-1 rounded text-xs">
+                                {p}
+                            </span>
                         ))}
-                    </ul>
+                    </div>
                 </div>
             )}
 
-            <div className="flex-1 overflow-y-auto bg-white p-4 rounded-lg shadow space-y-2">
+            {/* 채팅 영역 */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {messages.map((msg, idx) => (
                     <div
                         key={idx}
@@ -195,20 +201,22 @@ const ChatPage = () => {
                         }`}
                     >
                         <div
-                            className={`max-w-xs p-2 rounded-lg shadow ${
+                            className={`max-w-xs p-2 rounded-lg text-sm ${
                                 msg.sender === nickname
-                                    ? "bg-green-300 text-black"
+                                    ? "bg-blue-500 text-white"
                                     : msg.sender === "system"
-                                        ? "bg-yellow-200 text-gray-700"
-                                        : "bg-gray-300 text-black"
+                                        ? "bg-yellow-100 text-gray-700 text-xs"
+                                        : "bg-gray-200 text-black"
                             }`}
                         >
-                            {msg.sender !== "system" && (
-                                <div className="text-sm font-semibold">{msg.sender}</div>
+                            {msg.sender !== "system" && msg.sender !== nickname && (
+                                <div className="text-xs font-semibold mb-1">{msg.sender}</div>
                             )}
                             <div>{msg.content}</div>
                             {msg.time && (
-                                <div className="text-xs text-gray-600 text-right">
+                                <div className={`text-xs mt-1 ${
+                                    msg.sender === nickname ? "text-blue-100" : "text-gray-500"
+                                }`}>
                                     {msg.time}
                                 </div>
                             )}
@@ -218,17 +226,18 @@ const ChatPage = () => {
                 <div ref={chatEndRef} />
             </div>
 
-            <div className="flex mt-4">
+            {/* 입력 영역 */}
+            <div className="flex p-3 bg-gray-50 border-t">
                 <input
-                    className="flex-1 p-2 border rounded-md mr-2"
+                    className="flex-1 p-2 border rounded-l-md text-sm"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="메시지를 입력하세요"
+                    placeholder="메시지 입력..."
                 />
                 <button
                     onClick={sendMessage}
-                    className="bg-green-400 text-white px-4 py-2 rounded-md hover:bg-green-500"
+                    className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600 text-sm"
                 >
                     전송
                 </button>

@@ -25,7 +25,7 @@ const IPhoneMockup = ({ children }) => {
                         <path fillRule="evenodd" clipRule="evenodd" d="M26 23H401V835H26V23Z" fill="white"/>
                         {/* foreignObject를 사용하여 내부에 React 컴포넌트 렌더링 */}
                         <foreignObject x="26" y="23" width="375" height="812">
-                            <div className="flex justify-center h-full w-full pt-40">
+                            <div className="flex justify-center h-full w-full">
                                 {children}
                             </div>
                         </foreignObject>
