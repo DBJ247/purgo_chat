@@ -19,7 +19,7 @@ const ChatPage = () => {
     useEffect(() => {
         const fetchBadWordCount = async () => {
             try {
-                const response = await fetch("http://localhost:8081/api/chat/count");
+                const response = await fetch("http://10.0.2.98/api/chat/count");
                 if (response.ok) {
                     const data = await response.json();
                     setBadWordCount(data);
@@ -41,7 +41,7 @@ const ChatPage = () => {
             return;
         }
 
-        socketRef.current = new WebSocket("ws://localhost:8081/ws/chat");
+        socketRef.current = new WebSocket("ws://10.0.2.98/ws/chat");
 
         socketRef.current.onopen = () => {
             socketRef.current.send(
