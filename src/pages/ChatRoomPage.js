@@ -24,7 +24,7 @@ const ChatPage = () => {
     useEffect(() => {
         const fetchBadWordCount = async () => {
             try {
-                const response = await fetch("http://localhost:8080/api/chat/count");
+                const response = await fetch("http://43.202.183.36/api/chat/count");
                 if (response.ok) {
                     const data = await response.json();
                     setBadWordCount(data);
