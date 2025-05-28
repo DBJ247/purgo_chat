@@ -18,7 +18,26 @@ const App = () => {
         <NicknameProvider>
             <Router>
                 <Routes>
-                    <Route path="/" element={<NicknamePage />} />
+                    <Route
+                        path="/"
+                        element={
+                            <div className="bg-[#C2DFFF] min-h-screen relative flex justify-center items-center">
+                                {/* PURGO 링크 */}
+                                <a
+                                    href="http://purgo.kro.kr"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="absolute top-4 left-4 px-4 py-2 bg-white text-blue-600 font-bold rounded-full shadow hover:bg-blue-100 transition cursor-pointer z-50"
+                                >
+                                    PURGO
+                                </a>
+
+                                <IPhoneMockup>
+                                    <NicknamePage />
+                                </IPhoneMockup>
+                            </div>
+                        }
+                    />
                     <Route
                         path="/chat"
                         element={
