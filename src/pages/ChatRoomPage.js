@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 const ChatPage = () => {
     const socketRef = useRef(null);
     const chatEndRef = useRef(null);
+    const inputRef = useRef(null); // ✅ 입력창 참조용 ref 추가
     const { nickname, resetNickname } = useNickname();
     const navigate = useNavigate();
 
@@ -110,6 +111,13 @@ const ChatPage = () => {
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    // ✅ 연결 완료되면 입력창에 자동 포커스
+    useEffect(() => {
+        if (connected) {
+            inputRef.current?.focus();
+        }
+    }, [connected]);
 
     const sendMessage = () => {
         if (input.trim()) {
@@ -221,6 +229,7 @@ const ChatPage = () => {
             {/* 입력창 */}
             <div className="flex items-center gap-2 px-4 py-3 bg-white border-t shadow-inner">
                 <input
+                    ref={inputRef} // ✅ 자동 포커스 설정
                     className="flex-1 p-2 text-sm rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
                     placeholder="메시지를 입력하세요..."
                     value={input}
