@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 const ChatPage = () => {
     const socketRef = useRef(null);
     const chatEndRef = useRef(null);
-    const inputRef = useRef(null); // ✅ 입력창 참조용 ref 추가
+    const inputRef = useRef(null);
     const { nickname, resetNickname } = useNickname();
     const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ const ChatPage = () => {
                     setBadWordCount(data);
                 }
             } catch (error) {
-                console.error("욕설 횟수 요청 에러:", error);
+                console.error("요응 회수 요청 에러:", error);
             }
         };
         fetchBadWordCount();
@@ -68,7 +68,7 @@ const ChatPage = () => {
                     return;
                 }
 
-                const { type, sender, time } = data;
+                const { type, sender } = data;
 
                 if (type === "ENTER") {
                     if (sender === nickname) setConnected(true);
@@ -77,13 +77,13 @@ const ChatPage = () => {
                     );
                     setMessages((prev) => [
                         ...prev,
-                        { sender: "system", content: `${sender}님이 입장하셨습니다.`, time },
+                        { sender: "system", content: `${sender}님이 입장하셨습니다.` },
                     ]);
                 } else if (type === "LEAVE") {
                     setParticipants((prev) => prev.filter((p) => p !== sender));
                     setMessages((prev) => [
                         ...prev,
-                        { sender: "system", content: `${sender}님이 퇴장하셨습니다.`, time },
+                        { sender: "system", content: `${sender}님이 퇴장하셨습니다.` },
                     ]);
                 } else if (type === "TALK") {
                     setMessages((prev) => [...prev, data]);
@@ -95,7 +95,7 @@ const ChatPage = () => {
                     );
                 }
             } catch (err) {
-                console.error("웹소켓 메시지 파싱 오류:", err);
+                console.error("웹소스 메시지 파싱 오류:", err);
             }
         };
 
@@ -112,7 +112,6 @@ const ChatPage = () => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // ✅ 연결 완료되면 입력창에 자동 포커스
     useEffect(() => {
         if (connected) {
             inputRef.current?.focus();
@@ -151,11 +150,14 @@ const ChatPage = () => {
     return (
         <div className="flex flex-col h-full w-full max-w-sm mx-auto bg-white">
             {/* 헤더 */}
-            <div className="sticky top-0 z-10 bg-white border-b px-4 pt-12 pb-3 shadow-sm">
+            <div className="sticky top-0 z-10 bg-[#f4f4f4] px-4 pt-12 pb-3 shadow-sm">
                 <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-700">
-                        🧼 욕설: <span className="text-red-500">{badWordCount}</span>
-                    </span>
+                    <img
+  src="/images/exit.png"
+  alt="나가기"
+  onClick={handleLeave}
+  className="w-6 h-6 cursor-pointer hover:opacity-70"
+/>
                     <div className="flex items-center gap-2">
                         <button
                             className="bg-gray-100 text-gray-800 text-sm px-2 py-1 rounded-md hover:bg-gray-200"
@@ -163,23 +165,23 @@ const ChatPage = () => {
                         >
                             👥 참여자
                         </button>
-                        <button
-                            className="bg-red-500 text-white text-sm px-3 py-1 rounded-md hover:bg-red-600 shadow"
-                            onClick={handleLeave}
-                        >
-                            나가기
-                        </button>
+                        <span className="text-sm font-semibold text-gray-700">
+                             욕설: <span className="text-red-500">{badWordCount}</span>
+                        </span>
                     </div>
                 </div>
             </div>
 
             {/* 참여자 목록 */}
             {showParticipants && (
-                <div className="p-3 bg-blue-50 border-b">
+                <div className="p-3 bg-gray-300/50 backdrop-blur-sm absolute top-[5.5rem] left-[1px] w-[calc(100%-2px)] z-10 ">
                     <h3 className="font-semibold text-sm mb-2">👥 참여자 ({participants.length})</h3>
                     <div className="flex flex-wrap gap-2">
                         {participants.map((p, idx) => (
-                            <span key={idx} className="bg-blue-100 px-3 py-1 rounded-full text-xs text-blue-800">
+                            <span
+                                key={idx}
+                                className="bg-blue-100 px-3 py-1 rounded-full text-xs text-blue-800"
+                            >
                                 {p}
                             </span>
                         ))}
@@ -188,35 +190,41 @@ const ChatPage = () => {
             )}
 
             {/* 채팅 메시지 영역 */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+            <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5 relative z-0">
                 {messages.map((msg, idx) => (
                     <div
                         key={idx}
-                        className={`flex ${
+                        className={`flex flex-col ${
                             msg.sender === nickname
-                                ? "justify-end"
+                                ? "items-end"
                                 : msg.sender === "system"
-                                ? "justify-center"
-                                : "justify-start"
+                                ? "items-center"
+                                : "items-start"
                         }`}
                     >
+                        {/* 상대방 닉네임 표시 */}
+                        {msg.sender !== "system" && msg.sender !== nickname && (
+                            <div className="text-xs font-normal text-gray-700 mb-0.5 ml-2">
+                                {msg.sender}
+                            </div>
+                        )}
+
                         <div
-                            className={`relative max-w-xs p-3 text-sm rounded-2xl shadow ${
+                            className={`relative max-w-xs px-3 py-2 text-base rounded-2xl shadow ${
                                 msg.sender === nickname
-                                    ? "bg-blue-500 text-white self-end rounded-br-sm"
+                                    ? "bg-[#34C759] text-white self-end rounded-br-sm font-normal"
                                     : msg.sender === "system"
-                                    ? "bg-transparent text-gray-400 italic text-center"
-                                    : "bg-gray-100 text-black self-start rounded-bl-sm"
+                                    ? "bg-transparent text-gray-400 italic text-center font-normal"
+                                    : "bg-[#E8E9EB] text-black self-start rounded-bl-sm font-normal"
                             }`}
                         >
-                            {msg.sender !== "system" && msg.sender !== nickname && (
-                                <div className="text-xs font-semibold mb-1 text-gray-700">
-                                    {msg.sender}
-                                </div>
-                            )}
                             <div>{msg.content}</div>
-                            {msg.time && (
-                                <div className="text-[10px] text-right mt-1 text-gray-400">
+                            {msg.time && msg.sender !== "system" && (
+                                <div
+                                    className={`text-[10px] text-right mt-0.5 ${
+                                        msg.sender === nickname ? "text-white" : "text-gray-500"
+                                    }`}
+                                >
                                     {msg.time}
                                 </div>
                             )}
@@ -229,8 +237,8 @@ const ChatPage = () => {
             {/* 입력창 */}
             <div className="flex items-center gap-2 px-4 py-3 bg-white border-t shadow-inner">
                 <input
-                    ref={inputRef} // ✅ 자동 포커스 설정
-                    className="flex-1 p-2 text-sm rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    ref={inputRef}
+                    className="flex-1 p-2 text-sm rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
                     placeholder="메시지를 입력하세요..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -238,7 +246,7 @@ const ChatPage = () => {
                 />
                 <button
                     onClick={sendMessage}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition"
+                    className="px-4 py-2 bg-[#34C759] text-white font-normal rounded-full text-base hover:bg-green-500 transition"
                 >
                     전송
                 </button>
